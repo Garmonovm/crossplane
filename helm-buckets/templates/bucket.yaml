@@ -12,6 +12,7 @@ metadata:
     env: {{ .tags.env | default "unknown" }}
     managed-by: crossplane
     managed-by-helm: crossplane-s3-buckets
+    example-name: {{ .name }}
   annotations:
     description: {{ .description | default "S3 bucket managed by Crossplane" }}
 spec:
@@ -36,8 +37,9 @@ metadata:
 spec:
   forProvider:
     region: {{ .region | default "eu-central-1" }}
-    bucketRef:
-      name: {{ .name }}
+    bucketSelector:
+      matchLabels:
+        example-name: {{ .name }}
     versioningConfiguration:
     - status: Enabled
   providerConfigRef:
@@ -58,8 +60,9 @@ metadata:
 spec:
   forProvider:
     region: {{ .region | default "eu-central-1" }}
-    bucketRef:
-      name: {{ .name }}
+    bucketSelector:
+      matchLabels:
+        example-name: {{ .name }}
     rule:
     - applyServerSideEncryptionByDefault:
       - sseAlgorithm: AES256
@@ -81,12 +84,13 @@ metadata:
 spec:
   forProvider:
     region: {{ .region | default "eu-central-1" }}
-    bucketRef:
-      name: {{ .name }}
     blockPublicAcls: true
     blockPublicPolicy: true
     ignorePublicAcls: true
     restrictPublicBuckets: true
+    bucketSelector:
+      matchLabels:
+        example-name: {{ .name }}
   providerConfigRef:
     name: {{ .providerConfigRef | default "dev-eu-central-1" }}
 {{- end }}
