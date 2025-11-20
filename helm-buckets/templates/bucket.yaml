@@ -10,7 +10,7 @@ metadata:
     testing.upbound.io/example-name: {{ .name }}
     app: crossplane-bucket
     team: {{ .tags.team | default "unknown" }}
-    env: {{ .tags.env | default "unknown" }}
+    environment: {{ .tags.environment | default "unknown" }}
   annotations:
     description: {{ .description | default "S3 bucket managed by Crossplane" }}
 spec:
