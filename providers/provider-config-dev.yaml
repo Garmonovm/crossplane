@@ -1,7 +1,7 @@
 apiVersion: aws.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
-  name: dev-us-east-1
+  name: dev-eu-central-1
 spec:
   credentials:
     source: Secret
