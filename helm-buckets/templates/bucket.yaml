@@ -22,7 +22,7 @@ spec:
     {{- end }}
   providerConfigRef:
     name: {{ .providerConfigRef | default "dev-eu-central-1" }}
-
+    kind: ClusterProviderConfig
 {{- if .versioning }}
 ---
 # Enable Versioning
