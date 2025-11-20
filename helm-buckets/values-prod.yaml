@@ -1,0 +1,13 @@
+buckets:
+  - name: data-platform-prod-raw-dfgdg33
+    region: eu-west-1
+    providerConfigRef: prod-eu-west-1
+    versioning: true
+    encryption: true
+    publicAccessBlock: true
+    tags:
+      team: data-platform
+      env: prod
+      owner: prod-team
+      cost-center: engineering
+    description: "Production raw data ingestion"

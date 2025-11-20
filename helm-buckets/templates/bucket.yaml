@@ -1,0 +1,90 @@
+{{- range .Values.buckets }}
+---
+# S3 Bucket Resource
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: {{ .name }}
+  namespace: default
+  labels:
+    app: crossplane-bucket
+    team: {{ .tags.team | default "unknown" }}
+    env: {{ .tags.env | default "unknown" }}
+    managed-by: crossplane
+    managed-by-helm: crossplane-s3-buckets
+  annotations:
+    description: {{ .description | default "S3 bucket managed by Crossplane" }}
+spec:
+  forProvider:
+    region: {{ .region | default "eu-central-1" }}
+    tags:
+      {{- toYaml .tags | nindent 6 }}
+  providerConfigRef:
+    name: {{ .providerConfigRef | default "dev-eu-central-1" }}
+    
+{{- if .versioning }}
+---
+# Enable Versioning
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketVersioningV2
+metadata:
+  name: {{ .name }}-versioning
+  namespace: default
+  labels:
+    app: crossplane-bucket
+    bucket: {{ .name }}
+spec:
+  forProvider:
+    bucketRef:
+      name: {{ .name }}
+    versioningConfiguration:
+    - status: Enabled
+  providerConfigRef:
+    name: {{ .providerConfigRef | default "dev-us-east-1" }}
+{{- end }}
+
+{{- if .encryption }}
+---
+# Enable Server-Side Encryption
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketServerSideEncryptionConfigurationV2
+metadata:
+  name: {{ .name }}-encryption
+  namespace: default
+  labels:
+    app: crossplane-bucket
+    bucket: {{ .name }}
+spec:
+  forProvider:
+    bucketRef:
+      name: {{ .name }}
+    rule:
+    - applyServerSideEncryptionByDefault:
+      - sseAlgorithm: AES256
+  providerConfigRef:
+    name: {{ .providerConfigRef | default "dev-us-east-1" }}
+{{- end }}
+
+{{- if .publicAccessBlock }}
+---
+# Block Public Access
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: {{ .name }}-public-block
+  namespace: default
+  labels:
+    app: crossplane-bucket
+    bucket: {{ .name }}
+spec:
+  forProvider:
+    bucketRef:
+      name: {{ .name }}
+    blockPublicAcls: true
+    blockPublicPolicy: true
+    ignorePublicAcls: true
+    restrictPublicBuckets: true
+  providerConfigRef:
+    name: {{ .providerConfigRef | default "dev-us-east-1" }}
+{{- end }}
+{{- end }}

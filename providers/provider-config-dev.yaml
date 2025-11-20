@@ -1,0 +1,13 @@
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: dev-eu-central-1
+  namespace: crossplane-system
+spec:
+  region: eu-central-1
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-dev-credentials
+      key: creds

@@ -1,0 +1,29 @@
+# Exclude sensitive AWS credentials files
+*.ini
+aws-credentials.ini
+aws-dev-credentials.ini
+
+# Exclude empty files
+!*/
+
+# Best practices
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.bak
+*.old
+
+# Ignore IDE-specific files
+.idea/
+.vscode/
+*.iml
+
+# Ignore node_modules and dependencies
+node_modules/

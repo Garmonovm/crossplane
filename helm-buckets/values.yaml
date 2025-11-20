@@ -1,0 +1,12 @@
+# Default values for crossplane-s3-buckets
+# This is a YAML-formatted file.
+
+# Empty by default - override in environment-specific values files
+buckets: []
+# Default settings applied to all buckets (can be overridden per bucket)
+defaults:
+  versioning: true
+  encryption: true
+  publicAccessBlock: true
+  region: us-east-1
+  providerConfigRef: dev-us-east-1
