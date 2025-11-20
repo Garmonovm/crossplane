@@ -1,4 +1,4 @@
-buckets:
+buckets: []
   # Raw data ingestion bucket
   # - name: trussardi-temp-bucket-sdfdgm
   #   region: eu-central-1
