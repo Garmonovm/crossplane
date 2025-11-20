@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/Garmonovm/crossplane.git
     targetRevision: main
-    path: crossplane/helm-buckets
+    path: helm-buckets
     helm:
       releaseName: crossplane-buckets-dev
       valueFiles:
