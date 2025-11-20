@@ -1,12 +1,11 @@
 apiVersion: aws.m.upbound.io/v1beta1
-kind: ProviderConfig
+kind: ClusterProviderConfig
 metadata:
-  name: dev-eu-central-1
-  namespace: crossplane-system
+  name: default
 spec:
   credentials:
     source: Secret
     secretRef:
       namespace: crossplane-system
-      name: aws-dev-credentials
+      name: aws-secret
       key: creds
