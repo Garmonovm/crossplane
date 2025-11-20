@@ -1,21 +1,21 @@
 buckets:
   # Raw data ingestion bucket
-  - name: trussardi-temp-bucket-sdfdgm
-    region: eu-central-1
-    providerConfigRef: dev-eu-central-1
-    versioning: false
-    encryption: false
-    publicAccessBlock: true
-    tags:
-      team: dev
-      environment: development-trussardi
+  # - name: trussardi-temp-bucket-sdfdgm
+  #   region: eu-central-1
+  #   providerConfigRef: dev-eu-central-1
+  #   versioning: false
+  #   encryption: false
+  #   publicAccessBlock: true
+  #   tags:
+  #     team: dev
+  #     environment: development-trussardi
 
-  - name: trussardi-temp-bucket-coommmon
-    region: eu-central-1
-    providerConfigRef: dev-eu-central-1
-    versioning: false
-    encryption: false
-    publicAccessBlock: true
-    tags:
-      team: dev
-      environment: development-trussardi-common
+  # - name: trussardi-temp-bucket-coommmon
+  #   region: eu-central-1
+  #   providerConfigRef: dev-eu-central-1
+  #   versioning: false
+  #   encryption: false
+  #   publicAccessBlock: true
+  #   tags:
+  #     team: dev
+  #     environment: development-trussardi-common
