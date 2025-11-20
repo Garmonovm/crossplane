@@ -99,8 +99,7 @@ kubectl get pods -n argocd
 
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 
-admin
-o93IhtmmO7UjeBOU
+
 
 # For Minikube, get the service URL
 minikube service argocd-server -n argocd
