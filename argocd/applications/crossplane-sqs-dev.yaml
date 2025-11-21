@@ -10,12 +10,13 @@ spec:
 
   # Source: Git repository
   source:
-    repoURL: https://github.com/Garmonovm/argocd-cluster-addons
+    repoURL: https://github.com/Garmonovm/crossplane.git
     targetRevision: main
     path: helm-sqs
     helm:
       releaseName: crossplane-sqs-dev
       valueFiles:
+        - values.yaml
         - values-dev.yaml
 
   # Destination: Current cluster, default namespace
