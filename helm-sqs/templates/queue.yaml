@@ -17,7 +17,7 @@
 {{- if $dlqEnabled }}
 ---
 # Dead Letter Queue
-apiVersion: sqs.aws.m.upbound.io/v1beta1
+apiVersion: sqs.aws.upbound.io/v1beta1
 kind: Queue
 metadata:
   name: {{ $queueName }}-dlq
@@ -53,12 +53,11 @@ spec:
       {{- end }}
   providerConfigRef:
     name: {{ $providerConfig }}
-    kind: ClusterProviderConfig
 {{- end }}
 
 ---
 # Main SQS Queue
-apiVersion: sqs.aws.m.upbound.io/v1beta1
+apiVersion: sqs.aws.upbound.io/v1beta1
 kind: Queue
 metadata:
   name: {{ $queueName }}

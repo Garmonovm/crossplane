@@ -117,7 +117,7 @@
 
 ---
 # IAM Role
-apiVersion: iam.aws.m.upbound.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Role
 metadata:
   name: {{ $roleName }}
@@ -152,11 +152,10 @@ spec:
       {{- end }}
   providerConfigRef:
     name: {{ $providerConfig }}
-    kind: ClusterProviderConfig
 
 ---
 # Inline IAM Policy
-apiVersion: iam.aws.m.upbound.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: RolePolicy
 metadata:
   name: {{ $roleName }}-policy
@@ -179,5 +178,4 @@ spec:
     policy: {{ $policy | toJson | quote }}
   providerConfigRef:
     name: {{ $providerConfig }}
-    kind: ClusterProviderConfig
 {{- end }}
