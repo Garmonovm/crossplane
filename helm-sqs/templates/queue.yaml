@@ -34,7 +34,7 @@ spec:
   forProvider:
     region: {{ $region }}
     visibilityTimeoutSeconds: {{ .visibilityTimeoutSeconds | default $defaults.visibilityTimeoutSeconds }}
-    messageRetentionSeconds: {{ .dlq.messageRetentionSeconds | default $defaults.dlq.messageRetentionSeconds }}
+    messageRetentionSeconds: {{ int (.dlq.messageRetentionSeconds | default $defaults.dlq.messageRetentionSeconds) }}
     maxMessageSize: {{ .maxMessageSize | default $defaults.maxMessageSize }}
     delaySeconds: {{ .delaySeconds | default $defaults.delaySeconds }}
     receiveWaitTimeSeconds: {{ .receiveWaitTimeSeconds | default $defaults.receiveWaitTimeSeconds }}
@@ -75,15 +75,20 @@ spec:
   forProvider:
     region: {{ $region }}
     visibilityTimeoutSeconds: {{ .visibilityTimeoutSeconds | default $defaults.visibilityTimeoutSeconds }}
-    messageRetentionSeconds: {{ .messageRetentionSeconds | default $defaults.messageRetentionSeconds }}
+    messageRetentionSeconds: {{ int (.messageRetentionSeconds | default $defaults.messageRetentionSeconds) }}
     maxMessageSize: {{ .maxMessageSize | default $defaults.maxMessageSize }}
     delaySeconds: {{ .delaySeconds | default $defaults.delaySeconds }}
     receiveWaitTimeSeconds: {{ .receiveWaitTimeSeconds | default $defaults.receiveWaitTimeSeconds }}
     {{- if $dlqEnabled }}
     redrivePolicy: |
       {
-        "deadLetterTargetArn": "${arn:aws:sqs:{{ $region }}::{{ $queueName }}-dlq}",
+        "deadLetterTargetArn": "${arn}",
         "maxReceiveCount": {{ .dlq.maxReceiveCount | default $defaults.dlq.maxReceiveCount }}
+      }
+    redriveAllowPolicy: |
+      {
+        "redrivePermission": "byQueue",
+        "sourceQueueArns": []
       }
     {{- end }}
     tags:
