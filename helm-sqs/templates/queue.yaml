@@ -16,7 +16,7 @@
 
 {{- if $dlqEnabled }}
 ---
-# Dead Letter Queue (DLQ)
+# Dead Letter Queue
 apiVersion: sqs.aws.m.upbound.io/v1beta1
 kind: Queue
 metadata:

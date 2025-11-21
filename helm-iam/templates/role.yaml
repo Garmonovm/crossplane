@@ -14,7 +14,12 @@
 {{- $resources := .resources }}
 
 {{- /* Build Trust Policy */ -}}
-{{- $trustPolicyType := .trustPolicy.type | default $trustPolicyConfig.type | default $defaults.trustPolicyType }}
+{{- $trustPolicyType := "" }}
+{{- if .trustPolicy }}
+  {{- $trustPolicyType = .trustPolicy.type | default $trustPolicyConfig.type | default $defaults.trustPolicyType }}
+{{- else }}
+  {{- $trustPolicyType = $trustPolicyConfig.type | default $defaults.trustPolicyType }}
+{{- end }}
 {{- $trustPolicy := "" }}
 {{- if eq $trustPolicyType "irsa" }}
   {{- $saName := "" }}
