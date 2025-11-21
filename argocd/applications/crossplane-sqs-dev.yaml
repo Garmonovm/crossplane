@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-sqs-dev
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  # Source: Git repository
+  source:
+    repoURL: https://github.com/Garmonovm/argocd-cluster-addons
+    targetRevision: main
+    path: ../crossplane/helm-sqs
+    helm:
+      releaseName: crossplane-sqs-dev
+      valueFiles:
+        - values-dev.yaml
+
+  # Destination: Current cluster, default namespace
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  # Sync policy: automatic
+  syncPolicy:
+    automated:
+      prune: true # Delete if removed from Git
+      selfHeal: true # Reconcile if manually changed
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

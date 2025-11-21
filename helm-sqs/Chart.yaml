@@ -1,0 +1,15 @@
+apiVersion: v2
+name: crossplane-sqs-queues
+description: Helm chart for managing SQS queues with DLQ via Crossplane
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - crossplane
+  - sqs
+  - aws
+  - queues
+  - dlq
+maintainers:
+  - name: Maxim Garmonov
+    email: devops@example.com

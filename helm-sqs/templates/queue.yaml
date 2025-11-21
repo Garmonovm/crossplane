@@ -1,0 +1,133 @@
+{{- $env := .Values.environment }}
+{{- $region := .Values.region }}
+{{- $providerConfig := .Values.providerConfigRef }}
+{{- $defaults := .Values.defaults }}
+{{- $defaultTags := .Values.defaultTags }}
+
+{{- range .Values.queues }}
+{{- $queueName := printf "%s-%s" .name $env }}
+{{- $team := .team | default "platform" }}
+{{- $dlqEnabled := false }}
+{{- if .dlq }}
+  {{- if hasKey .dlq "enabled" }}
+    {{- $dlqEnabled = .dlq.enabled }}
+  {{- end }}
+{{- end }}
+
+{{- if $dlqEnabled }}
+---
+# Dead Letter Queue (DLQ)
+apiVersion: sqs.aws.m.upbound.io/v1beta1
+kind: Queue
+metadata:
+  name: {{ $queueName }}-dlq
+  namespace: default
+  labels:
+    app: crossplane-sqs
+    team: {{ $team }}
+    environment: {{ $env }}
+    queue-type: dlq
+    queue-name: {{ $queueName }}
+  annotations:
+    description: "DLQ for {{ $queueName }}"
+spec:
+  forProvider:
+    region: {{ $region }}
+    visibilityTimeoutSeconds: {{ .visibilityTimeoutSeconds | default $defaults.visibilityTimeoutSeconds }}
+    messageRetentionSeconds: {{ .dlq.messageRetentionSeconds | default $defaults.dlq.messageRetentionSeconds }}
+    maxMessageSize: {{ .maxMessageSize | default $defaults.maxMessageSize }}
+    delaySeconds: {{ .delaySeconds | default $defaults.delaySeconds }}
+    receiveWaitTimeSeconds: {{ .receiveWaitTimeSeconds | default $defaults.receiveWaitTimeSeconds }}
+    tags:
+      Name: {{ $queueName }}-dlq
+      Team: {{ $team }}
+      Environment: {{ $env }}
+      QueueType: dlq
+      {{- range $key, $value := $defaultTags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- if .tags }}
+      {{- range $key, $value := .tags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- end }}
+  providerConfigRef:
+    name: {{ $providerConfig }}
+    kind: ClusterProviderConfig
+{{- end }}
+
+---
+# Main SQS Queue
+apiVersion: sqs.aws.m.upbound.io/v1beta1
+kind: Queue
+metadata:
+  name: {{ $queueName }}
+  namespace: default
+  labels:
+    app: crossplane-sqs
+    team: {{ $team }}
+    environment: {{ $env }}
+    queue-type: main
+    queue-name: {{ $queueName }}
+  annotations:
+    description: "{{ .name }} queue for {{ $env }} environment"
+spec:
+  forProvider:
+    region: {{ $region }}
+    visibilityTimeoutSeconds: {{ .visibilityTimeoutSeconds | default $defaults.visibilityTimeoutSeconds }}
+    messageRetentionSeconds: {{ .messageRetentionSeconds | default $defaults.messageRetentionSeconds }}
+    maxMessageSize: {{ .maxMessageSize | default $defaults.maxMessageSize }}
+    delaySeconds: {{ .delaySeconds | default $defaults.delaySeconds }}
+    receiveWaitTimeSeconds: {{ .receiveWaitTimeSeconds | default $defaults.receiveWaitTimeSeconds }}
+    tags:
+      Name: {{ $queueName }}
+      Team: {{ $team }}
+      Environment: {{ $env }}
+      QueueType: main
+      {{- range $key, $value := $defaultTags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- if .tags }}
+      {{- range $key, $value := .tags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- end }}
+  providerConfigRef:
+    name: {{ $providerConfig }}
+    kind: ClusterProviderConfig
+
+{{- if $dlqEnabled }}
+---
+# Queue Redrive Policy (connects main queue to DLQ)
+apiVersion: sqs.aws.m.upbound.io/v1beta1
+kind: QueueRedrivePolicy
+metadata:
+  name: {{ $queueName }}-redrive
+  namespace: default
+  labels:
+    app: crossplane-sqs
+    team: {{ $team }}
+    environment: {{ $env }}
+    queue-name: {{ $queueName }}
+  annotations:
+    description: "Redrive policy for {{ $queueName }} to DLQ"
+spec:
+  forProvider:
+    region: {{ $region }}
+    queueUrlSelector:
+      matchLabels:
+        app: crossplane-sqs
+        queue-type: main
+        team: {{ $team }}
+        environment: {{ $env }}
+        queue-name: {{ $queueName }}
+    redrivePolicy: |
+      {
+        "deadLetterTargetArn": "arn:aws:sqs:{{ $region }}:${AWS_ACCOUNT_ID}:{{ $queueName }}-dlq",
+        "maxReceiveCount": {{ .dlq.maxReceiveCount | default $defaults.dlq.maxReceiveCount }}
+      }
+  providerConfigRef:
+    name: {{ $providerConfig }}
+    kind: ClusterProviderConfig
+{{- end }}
+{{- end }}

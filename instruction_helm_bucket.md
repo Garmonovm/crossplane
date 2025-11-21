@@ -121,40 +121,39 @@ aws sts get-caller-identity
 ## Step 1: Set Up Crossplane Providers
 
 ### 1.1 Install Crossplane Core
+
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
 
-
 helm install crossplane \
-  --namespace crossplane-system \
-  --create-namespace \
-  crossplane-stable/crossplane \
-  --version 2.1.1
-
+ --namespace crossplane-system \
+ --create-namespace \
+ crossplane-stable/crossplane \
+ --version 2.1.1
 
 kubectl get pods -n crossplane-system
-
 
 ### 1.2 Install AWS Family Provider
 
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 helm repo update
 
-
 helm install crossplane \
-  --namespace crossplane-system \
-  --create-namespace \
-  crossplane-stable/crossplane \
-  --version 2.1.1
-
+ --namespace crossplane-system \
+ --create-namespace \
+ crossplane-stable/crossplane \
+ --version 2.1.1
 
 kubectl get pods -n crossplane-system -w
 
 # Wait until both pods are Running
+
 # crossplane-xxxxx Running
+
 # crossplane-rbac-manager-xxxxx Running
 
 # Create AWS credentials file
+
 cat > /tmp/aws-credentials.ini <<EOF
 [default]
 aws_access_key_id = YOUR_AWS_ACCESS_KEY_ID
@@ -162,21 +161,23 @@ aws_secret_access_key = YOUR_AWS_SECRET_ACCESS_KEY
 EOF
 
 # Create Kubernetes secret
-kubectl create secret generic aws-secret \
-  --namespace=crossplane-system \
-  --from-file=creds=./aws-credentials.ini
 
+kubectl create secret generic aws-secret \
+ --namespace=crossplane-system \
+ --from-file=creds=./aws-credentials.ini
 
 # Verify secret was created
+
 kubectl get secret -n crossplane-system
 kubectl describe secret aws-secret -n crossplane-system
 
 # Clean up the credentials file
-rm /tmp/aws-credentials.txt
 
+rm /tmp/aws-credentials.txt
 
 **For Production Account (Optional):**
 ** OPTIONAL FOR MULTIACCOUT TEST**
+
 ```bash
 cat > /tmp/aws-prod-credentials.ini <<EOF
 [default]
@@ -203,35 +204,33 @@ Create file: `crossplane/providers/provider-config-dev.yaml`
 
 ```yaml
 # Development Account - US East 1
-apiVersion: aws.upbound.io/v1beta1
-kind: ProviderConfig
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
 metadata:
   name: dev-eu-central-1
-  namespace: crossplane-system
 spec:
-  region: eu-central-1
   credentials:
     source: Secret
     secretRef:
       namespace: crossplane-system
-      name: aws-dev-credentials
+      name: aws-secret
       key: creds
+
 ---
 **OPTIONAL** Second account
 # Production Account - US East 1 (Optional)
-apiVersion: aws.upbound.io/v1beta1
-kind: ProviderConfig
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
 metadata:
   name: prod-us-east-1
-  namespace: crossplane-system
 spec:
-  region: us-east-1
   credentials:
     source: Secret
     secretRef:
       namespace: crossplane-system
-      name: aws-prod-credentials
+      name: aws-secret
       key: creds
+
 ```
 
 Apply provider configs:
@@ -242,9 +241,6 @@ kubectl apply -f crossplane/providers/provider-config-dev.yaml
 # Verify
 kubectl get providerconfig -n crossplane-system
 ```
-
-
-
 
 **Key Naming Convention:**
 

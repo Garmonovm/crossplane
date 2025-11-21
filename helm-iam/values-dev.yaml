@@ -1,0 +1,52 @@
+# Development environment IAM roles
+# Developers only need to specify: name, team, policyType, and resources
+
+environment: dev
+region: eu-central-1
+providerConfigRef: dev-eu-central-1
+
+# Trust policy configuration
+trustPolicy:
+  type: ec2  # Use 'irsa' for EKS with ServiceAccount binding
+  # For IRSA, specify:
+  # serviceAccountName: my-app-sa
+  # serviceAccountNamespace: default
+
+roles:
+  # SQS processor role for application
+  - name: sqs-processor
+    team: platform
+    description: "IAM role for SQS queue processing"
+    policyType: sqsConsumer
+    resources:
+      queues:
+        - app-events
+        - notifications
+        - background-jobs
+      buckets:
+        - input-data
+        - processed-data
+    # Optional: Add additional actions to the predefined policy
+    additionalActions:
+      - "s3:GetObject"
+      - "s3:ListBucket"
+      - "cloudwatch:PutMetricData"
+    # Optional: Specify ServiceAccount for IRSA
+    # serviceAccount:
+    #   name: sqs-processor-sa
+    #   namespace: default
+    tags:
+      purpose: sqs-processing
+
+  # SQS publisher role
+  - name: sqs-publisher
+    team: platform
+    description: "IAM role for publishing messages to SQS queues"
+    policyType: sqsPublisher
+    resources:
+      queues:
+        - app-events
+        - notifications
+        - background-jobs
+    tags:
+      purpose: sqs-publishing

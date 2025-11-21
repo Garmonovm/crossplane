@@ -1,0 +1,38 @@
+# Development environment SQS queues
+# Developers only need to specify: name, team, and optional overrides
+
+environment: dev
+region: eu-central-1
+providerConfigRef: dev-eu-central-1
+
+queues:
+  # Main application queue with DLQ
+  - name: app-events
+    team: platform
+    dlq:
+      enabled: true
+      maxReceiveCount: 3
+    visibilityTimeoutSeconds: 60
+    # Optional: Add custom tags
+    tags:
+      purpose: application-events
+
+  # Notifications queue with DLQ
+  - name: notifications
+    team: notifications
+    dlq:
+      enabled: true
+      maxReceiveCount: 5
+    messageRetentionSeconds: 86400  # 1 day
+    tags:
+      purpose: user-notifications
+
+  # Background jobs queue
+  - name: background-jobs
+    team: platform
+    dlq:
+      enabled: true
+    visibilityTimeoutSeconds: 300  # 5 minutes for long-running jobs
+    messageRetentionSeconds: 1209600  # 14 days
+    tags:
+      purpose: background-processing

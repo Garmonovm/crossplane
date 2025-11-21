@@ -1,0 +1,28 @@
+# Default values for crossplane-sqs-queues
+# This is a YAML-formatted file.
+
+# Environment configuration
+environment: dev
+region: eu-central-1
+providerConfigRef: dev-eu-central-1
+
+# Default SQS settings
+defaults:
+  visibilityTimeoutSeconds: 30
+  messageRetentionSeconds: 345600  # 4 days
+  maxMessageSize: 262144  # 256 KB
+  delaySeconds: 0
+  receiveWaitTimeSeconds: 20  # Long polling enabled by default
+  dlq:
+    enabled: false
+    maxReceiveCount: 3
+    messageRetentionSeconds: 1209600  # 14 days for DLQ
+
+# Default tags applied to all queues
+defaultTags:
+  managed-by: crossplane
+  deployed-via: argocd
+  cost-center: engineering
+
+# Empty by default - override in environment-specific values files
+queues: []

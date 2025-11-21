@@ -1,0 +1,178 @@
+{{- $env := .Values.environment }}
+{{- $region := .Values.region }}
+{{- $providerConfig := .Values.providerConfigRef }}
+{{- $defaults := .Values.defaults }}
+{{- $defaultTags := .Values.defaultTags }}
+{{- $policyTemplates := .Values.policyTemplates }}
+{{- $trustPolicyConfig := .Values.trustPolicy | default dict }}
+{{- $irsa := .Values.irsa | default dict }}
+
+{{- range .Values.roles }}
+{{- $roleName := printf "%s-%s" .name $env }}
+{{- $team := .team | default "platform" }}
+{{- $policyType := .policyType }}
+{{- $resources := .resources }}
+
+{{- /* Build Trust Policy */ -}}
+{{- $trustPolicyType := .trustPolicy.type | default $trustPolicyConfig.type | default $defaults.trustPolicyType }}
+{{- $trustPolicy := "" }}
+{{- if eq $trustPolicyType "irsa" }}
+  {{- $saName := "" }}
+  {{- $saNamespace := "" }}
+  {{- if .serviceAccount }}
+    {{- $saName = .serviceAccount.name }}
+    {{- $saNamespace = .serviceAccount.namespace }}
+  {{- else if $trustPolicyConfig.serviceAccountName }}
+    {{- $saName = $trustPolicyConfig.serviceAccountName }}
+    {{- $saNamespace = $trustPolicyConfig.serviceAccountNamespace }}
+  {{- end }}
+  {{- $oidcProvider := $irsa.oidcProvider }}
+  {{- $oidcProviderShort := $irsa.oidcProviderShort }}
+  {{- $trustPolicy = printf `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "%s"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "%s:sub": "system:serviceaccount:%s:%s"
+        }
+      }
+    }
+  ]
+}` $oidcProvider $oidcProviderShort $saNamespace $saName }}
+{{- else }}
+  {{- $trustPolicy = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}` }}
+{{- end }}
+
+{{- /* Build Resource ARNs */ -}}
+{{- $resourceArns := list }}
+{{- if $resources }}
+  {{- if $resources.queues }}
+    {{- range $resources.queues }}
+      {{- $queueName := printf "%s-%s" . $env }}
+      {{- $queueArn := printf "arn:aws:sqs:%s:*:%s" $region $queueName }}
+      {{- $resourceArns = append $resourceArns $queueArn }}
+      {{- if or (eq $policyType "sqsConsumer") (eq $policyType "sqsPublisher") }}
+        {{- $dlqArn := printf "arn:aws:sqs:%s:*:%s-dlq" $region $queueName }}
+        {{- $resourceArns = append $resourceArns $dlqArn }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if $resources.buckets }}
+    {{- range $resources.buckets }}
+      {{- $bucketName := printf "%s-%s" . $env }}
+      {{- $bucketArn := printf "arn:aws:s3:::%s" $bucketName }}
+      {{- $resourceArns = append $resourceArns $bucketArn }}
+      {{- $bucketObjectArn := printf "arn:aws:s3:::%s/*" $bucketName }}
+      {{- $resourceArns = append $resourceArns $bucketObjectArn }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- /* Build Policy from Template */ -}}
+{{- $policyActions := list }}
+{{- if eq $policyType "sqsConsumer" }}
+  {{- $policyActions = $policyTemplates.sqsConsumer.actions }}
+{{- else if eq $policyType "sqsPublisher" }}
+  {{- $policyActions = $policyTemplates.sqsPublisher.actions }}
+{{- else if eq $policyType "s3ReadOnly" }}
+  {{- $policyActions = $policyTemplates.s3ReadOnly.actions }}
+{{- else if eq $policyType "s3ReadWrite" }}
+  {{- $policyActions = $policyTemplates.s3ReadWrite.actions }}
+{{- end }}
+
+{{- /* Add additional actions if specified */ -}}
+{{- if .additionalActions }}
+  {{- range .additionalActions }}
+    {{- $policyActions = append $policyActions . }}
+  {{- end }}
+{{- end }}
+
+{{- /* Remove duplicates from actions */ -}}
+{{- $policyActions = $policyActions | uniq }}
+
+{{- $policyStatement := dict "Effect" "Allow" "Action" $policyActions "Resource" $resourceArns }}
+{{- $policy := dict "Version" "2012-10-17" "Statement" (list $policyStatement) }}
+
+---
+# IAM Role
+apiVersion: iam.aws.m.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $roleName }}
+  namespace: default
+  labels:
+    app: crossplane-iam
+    team: {{ $team }}
+    environment: {{ $env }}
+    role-name: {{ $roleName }}
+  annotations:
+    description: {{ .description | default (printf "%s role for %s environment" .name $env) }}
+    {{- if and (eq $trustPolicyType "irsa") .serviceAccount }}
+    eks.amazonaws.com/role-arn: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/{{ $roleName }}"
+    {{- end }}
+spec:
+  forProvider:
+    assumeRolePolicy: {{ $trustPolicy | quote }}
+    description: {{ .description | default (printf "%s role for %s environment" .name $env) }}
+    maxSessionDuration: {{ .maxSessionDuration | default $defaults.maxSessionDuration }}
+    tags:
+      Name: {{ $roleName }}
+      Team: {{ $team }}
+      Environment: {{ $env }}
+      PolicyType: {{ $policyType }}
+      {{- range $key, $value := $defaultTags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- if .tags }}
+      {{- range $key, $value := .tags }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+      {{- end }}
+  providerConfigRef:
+    name: {{ $providerConfig }}
+    kind: ClusterProviderConfig
+
+---
+# Inline IAM Policy
+apiVersion: iam.aws.m.upbound.io/v1beta1
+kind: RolePolicy
+metadata:
+  name: {{ $roleName }}-policy
+  namespace: default
+  labels:
+    app: crossplane-iam
+    team: {{ $team }}
+    environment: {{ $env }}
+    role-name: {{ $roleName }}
+  annotations:
+    description: "{{ $policyType }} policy for {{ $roleName }}"
+spec:
+  forProvider:
+    roleSelector:
+      matchLabels:
+        app: crossplane-iam
+        team: {{ $team }}
+        environment: {{ $env }}
+        role-name: {{ $roleName }}
+    policy: {{ $policy | toJson | quote }}
+  providerConfigRef:
+    name: {{ $providerConfig }}
+    kind: ClusterProviderConfig
+{{- end }}
