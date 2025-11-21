@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/Garmonovm/argocd-cluster-addons
     targetRevision: main
-    path: ../crossplane/helm-iam
+    path: helm-iam
     helm:
       releaseName: crossplane-iam-dev
       valueFiles:

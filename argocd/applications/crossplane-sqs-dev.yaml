@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/Garmonovm/argocd-cluster-addons
     targetRevision: main
-    path: ../crossplane/helm-sqs
+    path: helm-sqs
     helm:
       releaseName: crossplane-sqs-dev
       valueFiles:
